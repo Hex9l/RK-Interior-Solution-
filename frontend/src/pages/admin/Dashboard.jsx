@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Package, Image as ImageIcon, Layers, MessageSquare } from 'lucide-react';
 import api from '../../utils/axiosInstance';
 
 const Dashboard = () => {
