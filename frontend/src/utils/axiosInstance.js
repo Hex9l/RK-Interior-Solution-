@@ -1,9 +1,15 @@
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
+// Remove trailing slash from env variable if it exists to prevent double slashes (e.g. /api//packages)
+let envBaseUrl = import.meta.env.VITE_API_BASE_URL;
+if (envBaseUrl && envBaseUrl.endsWith('/')) {
+    envBaseUrl = envBaseUrl.slice(0, -1);
+}
+
 const isProd = import.meta.env.PROD;
 const defaultBaseURL = isProd ? 'https://rk-interior-solution.onrender.com/api' : 'http://localhost:5000/api';
-const baseURL = import.meta.env.VITE_API_BASE_URL || defaultBaseURL;
+const baseURL = envBaseUrl || defaultBaseURL;
 
 // Extract the host origin (e.g. https://rk-interior-solution.onrender.com) for socket connection
 let socketURL = 'http://localhost:5000';
