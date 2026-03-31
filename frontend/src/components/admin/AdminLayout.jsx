@@ -1,4 +1,6 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, useLocation, Navigate, Link, Outlet } from 'react-router-dom';
+import { LayoutDashboard, Package as PackageIcon, Image, Settings, MessageSquare, Home, ArrowLeft } from 'lucide-react';
 
 const AdminLayout = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
