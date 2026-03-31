@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { Plus, Upload, Image, Video, CheckCircle, X, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State shape (keep it simple & flat):

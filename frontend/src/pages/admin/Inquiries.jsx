@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
+import { Plus, Trash2, X } from 'lucide-react';
 
 const AdminInquiries = () => {
     const [inquiries, setInquiries] = useState([]);

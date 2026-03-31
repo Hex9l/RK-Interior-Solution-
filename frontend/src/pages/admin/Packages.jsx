@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
+import { Plus, Package, CheckCircle2, IndianRupee, Edit2, Trash2 } from 'lucide-react';
 
 const AdminPackages = () => {
     const [packages, setPackages] = useState([]);

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Upload, Edit2, Trash2, ChevronDown, CheckCircle, X } from 'lucide-react';
 
 const AdminIdeas = () => {
     const [activeTab, setActiveTab] = useState('images'); // 'images' or 'categories'
