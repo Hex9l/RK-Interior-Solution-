@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import api from '../utils/axiosInstance';
-import { X, PlayCircle, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -48,7 +46,7 @@ const Gallery = () => {
                     className: 'bg-black border border-[#D4AF37]/20 text-white shadow-2xl'
                 });
             }
-        } catch (error) {
+        } catch (err) {
             toast.error('Failed to update like status');
         }
     };
@@ -106,7 +104,7 @@ const Gallery = () => {
         setCurrentMediaIndex(0);
     };
 
-    const handleNext = (e) => {
+    const handleNext = React.useCallback((e) => {
         e?.stopPropagation();
         if (activeTab === 'works') {
             const currentWork = filteredWorks[currentIndex];
@@ -126,9 +124,9 @@ const Gallery = () => {
             const idea = ideas[nextIdx];
             setModalMedia({ url: idea.url, type: idea.type || 'image', title: idea.title || idea.category?.name || 'Design Idea' });
         }
-    };
+    }, [activeTab, filteredWorks, currentIndex, currentMediaIndex, ideas]);
 
-    const handlePrev = (e) => {
+    const handlePrev = React.useCallback((e) => {
         e?.stopPropagation();
         if (activeTab === 'works') {
             if (currentMediaIndex > 0) {
@@ -149,7 +147,7 @@ const Gallery = () => {
             const idea = ideas[prevIdx];
             setModalMedia({ url: idea.url, type: idea.type || 'image', title: idea.title || idea.category?.name || 'Design Idea' });
         }
-    };
+    }, [activeTab, filteredWorks, currentIndex, currentMediaIndex, ideas]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -160,7 +158,7 @@ const Gallery = () => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [modalMedia, currentIndex, currentMediaIndex, filteredWorks, works, ideas]);
+    }, [modalMedia, handleNext, handlePrev]);
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] pt-24 pb-20">

@@ -1,9 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
-import { Edit2, Trash2, Plus, X, Upload, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { socket } from '../../utils/axiosInstance';
 
 const AdminIdeas = () => {
     const [activeTab, setActiveTab] = useState('images'); // 'images' or 'categories'

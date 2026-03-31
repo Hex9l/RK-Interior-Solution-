@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, Loader2, ArrowRight, Home } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/axiosInstance';
 import { useAuth } from '../context/AuthContext';
 

@@ -1,10 +1,6 @@
-﻿import React, { useEffect, useState, useRef } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { MapPin, ArrowRight, PlayCircle, X, PencilRuler, Zap, TreePine, Hammer, Layers, LayoutGrid, Paintbrush, Lightbulb, Gem, GlassWater, Trophy } from 'lucide-react';
-import { Link } from 'react-router-dom';
+﻿import { useEffect, useState } from 'react';
+import { useScroll, useTransform } from 'framer-motion';
 import api from '../utils/axiosInstance';
-import PackageCard from '../components/PackageCard';
-import DesignIdeas from '../components/DesignIdeas';
 
 
 const Home = () => {

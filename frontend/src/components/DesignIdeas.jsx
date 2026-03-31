@@ -1,7 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, PlayCircle, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import api from '../utils/axiosInstance';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { useAuth } from '../context/AuthContext';
@@ -20,8 +17,8 @@ const DesignIdeas = () => {
                 const { data } = await api.get('/design-images?shuffle=true');
                 // Slice to show a balanced number on home page
                 setIdeas(data.slice(0, 8));
-            } catch (error) {
-                console.error('Error fetching design ideas', error);
+            } catch (err) {
+                console.error('Error fetching design ideas', err);
             } finally {
                 setLoading(false);
             }
@@ -51,7 +48,7 @@ const DesignIdeas = () => {
                     className: 'bg-black border border-[#D4AF37]/20 text-white'
                 });
             }
-        } catch (error) {
+        } catch (err) {
             toast.error('Failed to update like status');
         }
     };
@@ -70,7 +67,7 @@ const DesignIdeas = () => {
         setModalMedia(null);
     };
 
-    const handleNext = (e) => {
+    const handleNext = React.useCallback((e) => {
         e?.stopPropagation();
         const nextIdx = (currentIndex + 1) % ideas.length;
         setCurrentIndex(nextIdx);
@@ -80,9 +77,9 @@ const DesignIdeas = () => {
             type: idea.type || 'image', 
             title: idea.title || idea.category?.name || 'Design Idea' 
         });
-    };
+    }, [currentIndex, ideas]);
 
-    const handlePrev = (e) => {
+    const handlePrev = React.useCallback((e) => {
         e?.stopPropagation();
         const prevIdx = (currentIndex - 1 + ideas.length) % ideas.length;
         setCurrentIndex(prevIdx);
@@ -92,7 +89,7 @@ const DesignIdeas = () => {
             type: idea.type || 'image', 
             title: idea.title || idea.category?.name || 'Design Idea' 
         });
-    };
+    }, [currentIndex, ideas]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -103,7 +100,7 @@ const DesignIdeas = () => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [modalMedia, currentIndex, ideas]);
+    }, [modalMedia, handleNext, handlePrev]);
 
     if (!loading && ideas.length === 0) return null;
 

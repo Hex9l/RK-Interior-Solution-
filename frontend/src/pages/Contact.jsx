@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { MapPin, Phone, Mail, MessageCircle, Send } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import api from '../utils/axiosInstance';
 
@@ -17,7 +17,7 @@ const Contact = () => {
             await api.post('/inquiries', formData);
             toast.success('Your message has been sent successfully!');
             setFormData({ name: '', email: '', phone: '', message: '' });
-        } catch (error) {
+        } catch (err) {
             toast.error('Failed to send message. Please try again.');
         } finally {
             setLoading(false);

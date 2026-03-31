@@ -1,31 +1,32 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ReactLenis } from 'lenis/react';
+import { Suspense, lazy } from 'react';
 
 import { AuthProvider } from './context/AuthContext';
 
 import Layout from './components/Layout';
-const Home = React.lazy(() => import('./pages/Home'));
-const Gallery = React.lazy(() => import('./pages/Gallery'));
-const Contact = React.lazy(() => import('./pages/Contact'));
-const Login = React.lazy(() => import('./pages/Login'));
-const Signup = React.lazy(() => import('./pages/Signup'));
-const Knowledge = React.lazy(() => import('./pages/Knowledge'));
-const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
-const VerifyEmail = React.lazy(() => import('./pages/VerifyEmail'));
-const LikedDesigns = React.lazy(() => import('./pages/LikedDesigns'));
-const AdminLayout = React.lazy(() => import('./components/admin/AdminLayout'));
-const AdminPackages = React.lazy(() => import('./pages/admin/Packages'));
-const AdminWorks = React.lazy(() => import('./pages/admin/Works'));
-const AdminInquiries = React.lazy(() => import('./pages/admin/Inquiries'));
-const AdminIdeas = React.lazy(() => import('./pages/admin/Ideas'));
-const Dashboard = React.lazy(() => import('./pages/admin/Dashboard'));
-
 import ScrollToTop from './components/ScrollToTop';
-import { Suspense } from 'react';
+
+
+const Home = lazy(() => import('./pages/Home'));
+const Gallery = lazy(() => import('./pages/Gallery'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const Knowledge = lazy(() => import('./pages/Knowledge'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const LikedDesigns = lazy(() => import('./pages/LikedDesigns'));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminPackages = lazy(() => import('./pages/admin/Packages'));
+const AdminWorks = lazy(() => import('./pages/admin/Works'));
+const AdminInquiries = lazy(() => import('./pages/admin/Inquiries'));
+const AdminIdeas = lazy(() => import('./pages/admin/Ideas'));
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+
 
 // Loading fallback component
 const PageLoader = () => (

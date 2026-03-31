@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, X, PlayCircle, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/axiosInstance';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { useAuth } from '../context/AuthContext';

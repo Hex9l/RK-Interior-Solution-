@@ -3,8 +3,14 @@ import { io } from 'socket.io-client';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-// Extract the host origin (e.g. http://localhost:5000) for the socket connection
-const socketURL = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : 'http://localhost:5000';
+// Extract the host origin (e.g. http://localhost:5000) safely for the socket connection
+let socketURL = 'http://localhost:5000';
+try {
+    const url = new URL(baseURL);
+    socketURL = url.origin;
+} catch (err) {
+    console.error('Invalid VITE_API_BASE_URL:', err);
+}
 
 export const socket = io(socketURL, {
     transports: ['websocket', 'polling'], // Use Websocket explicitly to avoid strict CORS polling

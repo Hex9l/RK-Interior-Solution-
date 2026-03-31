@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../../utils/axiosInstance';
-import { Package, Image as ImageIcon, MessageSquare, BookOpen, Layers } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));

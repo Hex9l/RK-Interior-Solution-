@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
-import { Edit2, Trash2, Plus, X, Upload, Image, Video, AlertCircle, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 
 // ─────────────────────────────────────────────────────────────────────────────

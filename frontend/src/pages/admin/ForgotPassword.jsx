@@ -1,7 +1,4 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Mail, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import api from '../../utils/axiosInstance';
 

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import morgan from 'morgan';
 import fs from 'fs';
 import path from 'path';
 import { createServer } from 'http';
@@ -44,6 +45,7 @@ io.on("connection", (socket) => {
 });
 
 // Middleware
+app.use(morgan('dev'));
 app.use(cors({
     origin: process.env.NODE_ENV === "production" ? process.env.CLIENT_URL : allowedOrigins,
     credentials: true,
