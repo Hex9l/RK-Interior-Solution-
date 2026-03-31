@@ -1,15 +1,22 @@
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const isProd = import.meta.env.PROD;
+const defaultBaseURL = isProd ? 'https://rk-interior-solution.onrender.com/api' : 'http://localhost:5000/api';
+const baseURL = import.meta.env.VITE_API_BASE_URL || defaultBaseURL;
 
-// Extract the host origin (e.g. http://localhost:5000) safely for the socket connection
+// Extract the host origin (e.g. https://rk-interior-solution.onrender.com) for socket connection
 let socketURL = 'http://localhost:5000';
 try {
     const url = new URL(baseURL);
+    // Use origin to ensure we only get the protocol + host (without /api)
     socketURL = url.origin;
 } catch (err) {
     console.error('Invalid VITE_API_BASE_URL:', err);
+    // Fallback to baseURL if origin extraction fails but it looks like a valid string
+    if (typeof baseURL === 'string' && baseURL.startsWith('http')) {
+        socketURL = baseURL.split('/api')[0];
+    }
 }
 
 export const socket = io(socketURL, {

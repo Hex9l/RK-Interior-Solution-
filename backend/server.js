@@ -26,16 +26,18 @@ const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // Dynamic CORS Origins for Deployment
+const clientUrls = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(url => url.trim()) : [];
+
 const allowedOrigins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    process.env.CLIENT_URL
+    ...clientUrls
 ].filter(Boolean);
 
 // Socket.io setup
 export const io = new Server(httpServer, {
     cors: {
-        origin: process.env.NODE_ENV === "production" ? process.env.CLIENT_URL : allowedOrigins,
+        origin: allowedOrigins,
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true
     }
@@ -48,7 +50,7 @@ io.on("connection", (socket) => {
 // Middleware
 app.use(morgan('dev'));
 app.use(cors({
-    origin: process.env.NODE_ENV === "production" ? process.env.CLIENT_URL : allowedOrigins,
+    origin: allowedOrigins,
     credentials: true,
 }));
 app.use(express.json({ limit: '100mb' }));
