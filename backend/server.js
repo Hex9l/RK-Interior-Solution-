@@ -16,6 +16,7 @@ import designCategoryRoutes from './routes/designCategoryRoutes.js';
 import designImageRoutes from './routes/designImageRoutes.js';
 import contactInquiryRoutes from './routes/contactInquiryRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import knowledgeArticleRoutes from './routes/knowledgeArticleRoutes.js';
 
 // Initialize DB
 connectDB();
@@ -61,6 +62,7 @@ app.use('/api/design-categories', designCategoryRoutes);
 app.use('/api/design-images', designImageRoutes);
 app.use('/api/inquiries', contactInquiryRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/knowledge', knowledgeArticleRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

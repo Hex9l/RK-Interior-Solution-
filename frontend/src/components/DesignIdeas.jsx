@@ -1,21 +1,30 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, PlayCircle, Heart, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import api from '../utils/axiosInstance';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
-const DesignIdeas = () => {
-    const [ideas, setIdeas] = useState([]);
-    const [loading, setLoading] = useState(true);
+const DesignIdeas = ({ initialIdeas, initialLoading }) => {
+    const [ideas, setIdeas] = useState(initialIdeas || []);
+    const [loading, setLoading] = useState(initialLoading !== undefined ? initialLoading : true);
     const [modalMedia, setModalMedia] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const { user } = useAuth();
 
     useEffect(() => {
+        // Skip internal fetch if initial data is provided
+        if (initialIdeas) {
+            setIdeas(initialIdeas);
+            setLoading(initialLoading !== undefined ? initialLoading : false);
+            return;
+        }
+
         const fetchIdeas = async () => {
             try {
                 const { data } = await api.get('/design-images?shuffle=true');
-                // Slice to show a balanced number on home page
                 setIdeas(data.slice(0, 8));
             } catch (err) {
                 console.error('Error fetching design ideas', err);
@@ -24,7 +33,7 @@ const DesignIdeas = () => {
             }
         };
         fetchIdeas();
-    }, []);
+    }, [initialIdeas, initialLoading]);
 
     const handleLike = async (e, ideaId) => {
         e.stopPropagation();

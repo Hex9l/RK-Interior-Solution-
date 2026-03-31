@@ -1,4 +1,9 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    ChevronLeft, ChevronRight, PlayCircle, Heart, X, Search, Filter, 
+    Image as ImageIcon, Video 
+} from 'lucide-react';
 import api from '../utils/axiosInstance';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { useAuth } from '../context/AuthContext';

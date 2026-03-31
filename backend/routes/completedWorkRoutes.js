@@ -8,7 +8,10 @@ const router = express.Router();
 router.route('/')
     .get(async (req, res) => {
         try {
-            const works = await CompletedWork.find({}).sort('-createdAt');
+            const limit = req.query.limit ? parseInt(req.query.limit) : 0;
+            const works = await CompletedWork.find({})
+                .sort('-createdAt')
+                .limit(limit);
             res.json(works);
         } catch (error) {
             res.status(500).json({ message: error.message });

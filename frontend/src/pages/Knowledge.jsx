@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/axiosInstance';
-import { BookOpen, Layers, Sofa, Frame, Paintbrush, Ruler } from 'lucide-react';
+import { BookOpen, Layers, Sofa, Frame, Paintbrush, Ruler, Search, X, ChevronRight } from 'lucide-react';
 
 // Static curated furniture knowledge
 const STATIC_ARTICLES = [

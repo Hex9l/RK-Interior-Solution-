@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import Tilt from 'react-parallax-tilt';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, X } from 'lucide-react';
 
 const PackageCard = ({ pkg, index }) => {
     const [showDetails, setShowDetails] = useState(false);

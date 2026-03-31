@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Menu, X, User, Heart, LogOut, LogIn, 
+    Home as HomeIcon, Image as ImageIcon, Phone as PhoneIcon 
+} from 'lucide-react';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);

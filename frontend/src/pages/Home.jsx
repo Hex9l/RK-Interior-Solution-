@@ -1,7 +1,10 @@
-﻿import { useEffect, useState } from 'react';
-import { useScroll, useTransform } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { useScroll, useTransform, motion, AnimatePresence } from 'framer-motion';
+import { MapPin, ArrowRight, X, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import api from '../utils/axiosInstance';
-
+import PackageCard from '../components/PackageCard';
+import DesignIdeas from '../components/DesignIdeas';
 
 const Home = () => {
     const { scrollY } = useScroll();
@@ -9,40 +12,41 @@ const Home = () => {
     const opacity = useTransform(scrollY, [0, 500], [1, 0]);
 
     const [packages, setPackages] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [videoWorks, setVideoWorks] = useState([]);
+    const [designIdeas, setDesignIdeas] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [modalVideo, setModalVideo] = useState(null);
 
     useEffect(() => {
-        const fetchPackages = async () => {
+        const fetchHomeDashboard = async () => {
             try {
-                const { data } = await api.get('/packages');
-                setPackages(data);
-            } catch (error) {
-                console.error('Error fetching packages', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchPackages();
-    }, []);
+                // Fetch Packages, Works (limited), and Design Ideas in parallel
+                const [pkgRes, workRes, ideaRes] = await Promise.all([
+                    api.get('/packages'),
+                    api.get('/works?limit=10'),
+                    api.get('/design-images?shuffle=true')
+                ]);
 
-    useEffect(() => {
-        const fetchVideoWorks = async () => {
-            try {
-                const { data } = await api.get('/works');
+                setPackages(pkgRes.data);
+                
                 // Filter only works that have a video media entry
-                const videoItems = data.filter(w =>
+                const videoItems = workRes.data.filter(w =>
                     w.media?.some(m => m.type === 'video' || m.url?.includes('/video/'))
                 );
-                // Shuffle and pick 3
+                
+                // Shuffle and pick 3 for the home page
                 const shuffled = [...videoItems].sort(() => Math.random() - 0.5);
-                setVideoWorks(shuffled.slice(0, 3)); // 3 for desktop, only first 2 shown on mobile
-            } catch (e) {
-                console.error('Error fetching works', e);
+                setVideoWorks(shuffled.slice(0, 3));
+                setDesignIdeas(ideaRes.data.slice(0, 8));
+
+            } catch (err) {
+                console.error('Error loading dashboard data', err);
+            } finally {
+                // Ensure a minimum loading time for smooth transition
+                setTimeout(() => setLoading(false), 400);
             }
         };
-        fetchVideoWorks();
+        fetchHomeDashboard();
     }, []);
 
     return (
@@ -51,7 +55,7 @@ const Home = () => {
             <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
 
                 {/* Parallax Background */}
-                <motion.div className="absolute inset-0 z-0" style={{ y: y1, opacity }}>
+                <motion.div className="absolute inset-0 z-0 gpu-accelerated" style={{ y: y1, opacity }}>
                     <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/80 via-[#0a0a0a]/60 to-[#0a0a0a] z-10" />
                     <img
                         src="/hero-bg.png"
@@ -331,10 +335,8 @@ const Home = () => {
                 </div>
             </section>
 
-            
-
             {/* ── Completed Works Video Section ── */}
-            {videoWorks.length > 0 && (
+            {(loading || videoWorks.length > 0) && (
                 <section id="works" className="py-20 bg-[#0a0a0a] overflow-hidden">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -378,57 +380,65 @@ const Home = () => {
 
                         {/* Video cards grid — mobile: 2col/2 videos, sm+: 3col/3 videos */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-                            {videoWorks.map((work, index) => {
-                                const videoMedia = work.media.find(m => m.type === 'video' || m.url?.includes('/video/'));
-                                if (!videoMedia) return null;
-                                return (
-                                    <motion.div
-                                        key={work._id}
-                                        initial={{ opacity: 0, y: 30 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ duration: 0.7, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
-                                        className={`group relative cursor-pointer rounded-xl overflow-hidden bg-[#111] border border-white/[0.06] hover:border-[#D4AF37]/40 transition-all duration-500 hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:-translate-y-0.5 ${index >= 2 ? 'hidden sm:block' : ''}`}
-                                        onClick={() => setModalVideo(videoMedia)}
-                                    >
-                                        {/* Aspect ratio container */}
-                                        <div className="aspect-[9/16] relative overflow-hidden">
-                                            {/* Video */}
-                                            <video
-                                                src={videoMedia.url}
-                                                className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:opacity-90 opacity-60 group-hover:scale-105"
-                                                muted loop playsInline preload="none"
-                                                poster={videoMedia.coverUrl || ''}
-                                                onMouseEnter={e => e.target.play().catch(() => {})}
-                                                onMouseLeave={e => e.target.pause()}
-                                            />
-                                            {/* Dark gradient overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                                            {/* Gold shimmer on hover */}
-                                            <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/0 to-[#D4AF37]/0 group-hover:from-[#D4AF37]/5 transition-all duration-700" />
-                                            {/* Play button */}
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black/40 border border-[#D4AF37]/50 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 group-hover:bg-[#D4AF37]/20 group-hover:border-[#D4AF37] transition-all duration-500 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
-                                                    <PlayCircle size={22} className="text-[#D4AF37] sm:hidden drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" strokeWidth={1.5} />
-                                                    <PlayCircle size={28} className="text-[#D4AF37] hidden sm:block drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" strokeWidth={1.5} />
+                            {loading ? (
+                                [1, 2, 3].map(i => (
+                                    <div key={i} className={`aspect-[9/16] rounded-xl overflow-hidden bg-[#111] border border-white/[0.06] ${i === 3 ? 'hidden sm:block' : ''}`}>
+                                        <div className="skeleton w-full h-full"></div>
+                                    </div>
+                                ))
+                            ) : (
+                                videoWorks.map((work, index) => {
+                                    const videoMedia = work.media.find(m => m.type === 'video' || m.url?.includes('/video/'));
+                                    if (!videoMedia) return null;
+                                    return (
+                                        <motion.div
+                                            key={work._id}
+                                            initial={{ opacity: 0, y: 30 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.7, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
+                                            className={`group relative cursor-pointer rounded-xl overflow-hidden bg-[#111] border border-white/[0.06] hover:border-[#D4AF37]/40 transition-all duration-500 hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:-translate-y-0.5 ${index >= 2 ? 'hidden sm:block' : ''}`}
+                                            onClick={() => setModalVideo(videoMedia)}
+                                        >
+                                            {/* Aspect ratio container */}
+                                            <div className="aspect-[9/16] relative overflow-hidden">
+                                                {/* Video */}
+                                                <video
+                                                    src={videoMedia.url}
+                                                    className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:opacity-90 opacity-60 group-hover:scale-105"
+                                                    muted loop playsInline preload="none"
+                                                    poster={videoMedia.coverUrl || ''}
+                                                    onMouseEnter={e => e.target.play().catch(() => {})}
+                                                    onMouseLeave={e => e.target.pause()}
+                                                />
+                                                {/* Dark gradient overlay */}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                                                {/* Gold shimmer on hover */}
+                                                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/0 to-[#D4AF37]/0 group-hover:from-[#D4AF37]/5 transition-all duration-700" />
+                                                {/* Play button */}
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black/40 border border-[#D4AF37]/50 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 group-hover:bg-[#D4AF37]/20 group-hover:border-[#D4AF37] transition-all duration-500 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
+                                                        <PlayCircle size={22} className="text-[#D4AF37] sm:hidden drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" strokeWidth={1.5} />
+                                                        <PlayCircle size={28} className="text-[#D4AF37] hidden sm:block drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" strokeWidth={1.5} />
+                                                    </div>
+                                                </div>
+                                                {/* VIDEO badge */}
+                                                <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-black/70 border border-[#D4AF37]/30 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md">
+                                                    <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.12em] text-[#D4AF37]">Video</span>
                                                 </div>
                                             </div>
-                                            {/* VIDEO badge */}
-                                            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-black/70 border border-[#D4AF37]/30 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md">
-                                                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.12em] text-[#D4AF37]">Video</span>
-                                            </div>
-                                        </div>
 
-                                        {/* Bottom info */}
-                                        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5 z-10">
-                                            <div className="w-5 h-[1px] bg-[#D4AF37]/50 mb-1.5 sm:mb-2 group-hover:w-10 transition-all duration-500" />
-                                            <p className="text-white text-[10px] sm:text-sm font-semibold uppercase tracking-wider opacity-80 group-hover:opacity-100 group-hover:text-[#D4AF37] transition-colors duration-300 line-clamp-1">
-                                                {work.title || 'Interior'}
-                                            </p>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
+                                            {/* Bottom info */}
+                                            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5 z-10">
+                                                <div className="w-5 h-[1px] bg-[#D4AF37]/50 mb-1.5 sm:mb-2 group-hover:w-10 transition-all duration-500" />
+                                                <p className="text-white text-[10px] sm:text-sm font-semibold uppercase tracking-wider opacity-80 group-hover:opacity-100 group-hover:text-[#D4AF37] transition-colors duration-300 line-clamp-1">
+                                                    {work.title || 'Interior'}
+                                                </p>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })
+                            )}
                         </div>
 
                         {/* View all CTA */}
@@ -626,7 +636,7 @@ const Home = () => {
             </section>
             
             {/* ── Design Ideas Section ── */}
-            <DesignIdeas />
+            <DesignIdeas initialIdeas={designIdeas} initialLoading={loading} />
 
             {/* ── Packages Section ── */}
 
@@ -664,8 +674,14 @@ const Home = () => {
                     </div>
 
                     {loading ? (
-                        <div className="flex justify-center items-center py-20">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#D4AF37]" />
+                        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="bg-[#111] border border-[#222] p-6 rounded-2xl h-[450px]">
+                                    <div className="skeleton w-full h-[250px] rounded-xl mb-6"></div>
+                                    <div className="skeleton w-3/4 h-6 mb-4"></div>
+                                    <div className="skeleton w-1/2 h-8"></div>
+                                </div>
+                            ))}
                         </div>
                     ) : packages.length === 0 ? (
                         <div className="text-center text-gray-500 py-20 font-light italic text-sm">

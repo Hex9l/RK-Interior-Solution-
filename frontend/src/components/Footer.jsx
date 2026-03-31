@@ -1,4 +1,5 @@
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { ArrowUpRight, MapPin, Mail, Phone } from 'lucide-react';
 
 const Footer = () => {
     const location = useLocation();
