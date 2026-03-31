@@ -25,19 +25,42 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Dynamic CORS Origins for Deployment
-const clientUrls = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(url => url.trim()) : [];
-
-const allowedOrigins = [
+// ─── CORS Configuration ───────────────────────────────────────────────────────
+// Hardcoded trusted origins (production Vercel + all preview deployments)
+const TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    ...clientUrls
-].filter(Boolean);
+    "https://rk-interior-solution-frontend.vercel.app",   // Production Vercel
+    "https://rk-interior-solution.vercel.app",             // Alternate Vercel alias
+];
+
+// Also accept any Vercel preview deployment (*.vercel.app) & env-injected URLs
+const clientUrls = process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(',').map(u => u.trim())
+    : [];
+
+const corsOriginFn = (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Render health checks)
+    if (!origin) return callback(null, true);
+
+    // Allow if origin is in the trusted list
+    if (TRUSTED_ORIGINS.includes(origin)) return callback(null, true);
+
+    // Allow any extra CLIENT_URL values from environment
+    if (clientUrls.includes(origin)) return callback(null, true);
+
+    // Allow any Vercel preview deployment URL pattern: https://*.vercel.app
+    if (/^https:\/\/[a-zA-Z0-9-]+-[a-zA-Z0-9]+\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+    }
+
+    callback(new Error(`CORS policy blocked origin: ${origin}`));
+};
 
 // Socket.io setup
 export const io = new Server(httpServer, {
     cors: {
-        origin: allowedOrigins,
+        origin: corsOriginFn,
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true
     }
@@ -50,7 +73,7 @@ io.on("connection", (socket) => {
 // Middleware
 app.use(morgan('dev'));
 app.use(cors({
-    origin: allowedOrigins,
+    origin: corsOriginFn,
     credentials: true,
 }));
 app.use(express.json({ limit: '100mb' }));
