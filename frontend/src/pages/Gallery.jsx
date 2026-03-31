@@ -22,6 +22,10 @@ const Gallery = () => {
     const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
     const { user } = useAuth();
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 12;
+
     const filteredWorks = works.filter(work => {
         if (selectedWorkType === 'all') return true;
         const hasVideo = work.media?.some(m => m.type === 'video' || m.url?.includes('/video/'));
@@ -55,6 +59,10 @@ const Gallery = () => {
             toast.error('Failed to update like status');
         }
     };
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, selectedCategory, selectedWorkType]);
 
     useEffect(() => {
         fetchData();
@@ -165,6 +173,17 @@ const Gallery = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [modalMedia, handleNext, handlePrev]);
 
+    // Calculate Pagination Data
+    const activeItems = activeTab === 'works' ? filteredWorks : ideas;
+    const totalPages = Math.ceil(activeItems.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedItems = activeItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 300, behavior: 'smooth' });
+    };
+
     return (
         <div className="min-h-screen bg-[#0a0a0a] pt-24 pb-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -259,7 +278,9 @@ const Gallery = () => {
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
                         <AnimatePresence>
                             {activeTab === 'works' ? (
-                                filteredWorks.map((work, index) => (
+                                paginatedItems.map((work, idx) => {
+                                    const absoluteIndex = startIndex + idx;
+                                    return (
                                     <motion.div
                                         key={work._id}
                                         layout
@@ -267,8 +288,8 @@ const Gallery = () => {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 20 }}
-                                        transition={{ duration: 0.4, delay: index * 0.06 }}
-                                        onClick={() => work.media?.length > 0 && openModal(index)}
+                                        transition={{ duration: 0.4, delay: idx * 0.06 }}
+                                        onClick={() => work.media?.length > 0 && openModal(absoluteIndex)}
                                     >
                                         <div className="aspect-[3/4] sm:aspect-[4/5] overflow-hidden relative">
                                             {work.media && work.media.length > 0 ? (
@@ -318,9 +339,12 @@ const Gallery = () => {
                                             <div className="w-6 h-[1px] bg-[#D4AF37]/40 mt-2 group-hover:w-12 transition-all duration-500" />
                                         </div>
                                     </motion.div>
-                                ))
+                                    );
+                                })
                             ) : (
-                                ideas.map((idea, index) => (
+                                paginatedItems.map((idea, idx) => {
+                                    const absoluteIndex = startIndex + idx;
+                                    return (
                                     <motion.div
                                         key={idea._id}
                                         layout
@@ -328,8 +352,8 @@ const Gallery = () => {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 20 }}
-                                        transition={{ duration: 0.4, delay: index * 0.06 }}
-                                        onClick={() => openModal(index)}
+                                        transition={{ duration: 0.4, delay: idx * 0.06 }}
+                                        onClick={() => openModal(absoluteIndex)}
                                     >
                                         <div className="aspect-[3/4] sm:aspect-[4/5] overflow-hidden relative">
                                             {idea.type === 'video' ? (
@@ -368,9 +392,43 @@ const Gallery = () => {
                                             </p>
                                         </div>
                                     </motion.div>
-                                ))
+                                    );
+                                })
                             )}
                         </AnimatePresence>
+                    </div>
+                )}
+
+                {/* Pagination Controls */}
+                {!loading && totalPages > 1 && (
+                    <div className="mt-16 flex justify-center items-center gap-2 sm:gap-4">
+                        <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="w-10 h-10 rounded-full flex items-center justify-center border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 disabled:opacity-30 disabled:pointer-events-none transition-all group"
+                        >
+                            <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+                        </button>
+                        
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            {Array.from({ length: totalPages }).map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handlePageChange(i + 1)}
+                                    className={`w-8 h-8 rounded-full text-xs font-bold transition-all duration-300 ${currentPage === i + 1 ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-[#1a1a1a] text-gray-400 hover:text-white border border-transparent hover:border-white/20'}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="w-10 h-10 rounded-full flex items-center justify-center border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 disabled:opacity-30 disabled:pointer-events-none transition-all group"
+                        >
+                            <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                        </button>
                     </div>
                 )}
 
