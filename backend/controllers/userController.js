@@ -63,25 +63,20 @@ export const registerUser = async (req, res) => {
                 verificationOtp
             );
 
-            try {
-                await sendEmail({
-                    email: user.email,
-                    subject: 'Verify Your Account - R K Interior Solution',
-                    message,
-                    html
-                });
+            // Fire-and-forget verification email to avoid hanging the UI
+            sendEmail({
+                email: user.email,
+                subject: 'Verify Your Account - R K Interior Solution',
+                message,
+                html
+            }).catch(emailError => {
+                console.error('Verification email error (async):', emailError);
+            });
 
-                res.status(201).json({
-                    success: true,
-                    message: 'Registration successful! Please check your email to verify your account.'
-                });
-            } catch (emailError) {
-                console.error('Verification email error:', emailError);
-                return res.status(201).json({
-                    success: true,
-                    message: 'Registration successful, but verification email could not be sent. Please contact support or try "Resend Verification" later.'
-                });
-            }
+            res.status(201).json({
+                success: true,
+                message: 'Verification code sent! Please check your inbox.'
+            });
         } else {
             res.status(400).json({ message: 'Invalid user data' });
         }
@@ -116,22 +111,20 @@ export const forgotPassword = async (req, res) => {
             resetOtp
         );
 
-        try {
-            await sendEmail({
-                email: user.email,
-                subject: 'R K Interior Solution - Password Reset Code',
-                message,
-                html
-            });
-
-            res.status(200).json({ success: true, message: 'Password reset code sent. Please check your inbox.' });
-        } catch (emailError) {
-            console.error('Email send error:', emailError);
+        // Fire-and-forget email sending
+        sendEmail({
+            email: user.email,
+            subject: 'R K Interior Solution - Password Reset Code',
+            message,
+            html
+        }).catch(async (emailError) => {
+            console.error('Password reset email error (async):', emailError);
             user.resetPasswordOtp = undefined;
             user.resetPasswordOtpExpire = undefined;
             await user.save({ validateBeforeSave: false });
-            return res.status(500).json({ message: 'Email could not be sent. Please try again later.' });
-        }
+        });
+
+        res.status(200).json({ success: true, message: 'Password reset code sent. Please check your inbox.' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -302,14 +295,17 @@ export const resendVerification = async (req, res) => {
             verificationOtp
         );
 
-        await sendEmail({
+        // Fire-and-forget verification resend email
+        sendEmail({
             email: user.email,
             subject: 'Account Verification - R K Interior Solution',
             message,
             html
+        }).catch(emailError => {
+             console.error('Verification resend email error (async):', emailError);
         });
 
-        res.status(200).json({ success: true, message: 'Verification email resent.' });
+        res.status(200).json({ success: true, message: 'Verification code resent! Please check your inbox.' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
