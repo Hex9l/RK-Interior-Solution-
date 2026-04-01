@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLenis } from 'lenis/react';
 import { 
     ChevronLeft, ChevronRight, PlayCircle, Heart, X, Search, Filter, 
     Image as ImageIcon, Video 
@@ -21,6 +22,7 @@ const Gallery = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
     const { user } = useAuth();
+    const lenis = useLenis();
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -180,45 +182,21 @@ const Gallery = () => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const paginatedItems = activeItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-    // Premium Custom Smooth Scroll Engine (Apple Trackpad Physics)
-    const smoothScrollTo = (targetY, duration = 1000) => {
-        const startY = window.scrollY;
-        const difference = targetY - startY;
-        let startTime = null;
-
-        // Ultra-smooth "easeOutQuint" for a fast start and a long, butter-smooth coasting finish
-        const easeOutQuint = (t) => 1 - Math.pow(1 - t, 5);
-
-        const step = (currentTime) => {
-            if (!startTime) startTime = currentTime;
-            const progress = currentTime - startTime;
-            const percent = Math.min(progress / duration, 1);
-            
-            window.scrollTo(0, startY + difference * easeOutQuint(percent));
-
-            if (progress < duration) {
-                requestAnimationFrame(step);
-            }
-        };
-
-        requestAnimationFrame(step);
-    };
-
     const handlePageChange = (page) => {
         if (page === '...' || page < 1 || page > totalPages) return;
         
-        // 1. Calculate precise offset
-        if (gridRef.current) {
+        // Instant move to top of grid using Lenis to bypass global smoothing
+        if (gridRef.current && lenis) {
             const yOffset = gridRef.current.getBoundingClientRect().top + window.scrollY - 80;
-            smoothScrollTo(yOffset);
+            lenis.scrollTo(yOffset, { immediate: true });
+        } else if (gridRef.current) {
+            // Fallback if lenis is not ready
+            const yOffset = gridRef.current.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo(0, yOffset);
         }
 
-        // 2. The scroll takes 1000ms to fully settle.
-        // We trigger the image fade at 250ms, meaning the images dissolve beautifully
-        // during the long, slow coasting phase of the scroll.
-        setTimeout(() => {
-            setCurrentPage(page);
-        }, 250);
+        // Set page immediately for zero-lag response
+        setCurrentPage(page);
     };
 
     // Calculate Pagination Data
@@ -332,7 +310,7 @@ const Gallery = () => {
                         <div className="w-10 h-10 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37] animate-spin"></div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 min-h-[50vh]">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 min-h-[50vh] items-start">
                         <AnimatePresence mode="popLayout">
                             {activeTab === 'works' ? (
                                 paginatedItems.map((work, idx) => {
@@ -354,13 +332,15 @@ const Gallery = () => {
                                                         <PlayCircle size={36} className="text-[#D4AF37] absolute z-10 transition-transform duration-500 group-hover:scale-125 drop-shadow-[0_0_12px_rgba(212,175,55,0.5)]" strokeWidth={1.5} />
                                                         <video
                                                             src={work.media[0].url}
-                                                            className="absolute inset-0 w-full h-full object-cover opacity-70"
+                                                            className="absolute inset-0 w-full h-full object-cover"
                                                             muted loop playsInline preload="none"
                                                             poster={work.media[0].coverUrl || ''}
                                                         />
                                                     </div>
                                                 ) : (
-                                                    <img
+                                                    <motion.img
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
                                                         src={work.media[0].url}
                                                         alt={work.title || ''}
                                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
@@ -373,26 +353,30 @@ const Gallery = () => {
                                                     <PlayCircle size={28} className="text-gray-700" />
                                                 </div>
                                             )}
-                                            {/* Gradient overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500" />
+                                            {/* Premium Hover Info Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4 lg:p-6">
+                                                {work.title && (
+                                                    <motion.h3 
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        whileInView={{ opacity: 1, y: 0 }}
+                                                        className="text-white font-serif italic text-base sm:text-xl leading-tight tracking-wide mb-1"
+                                                    >
+                                                        {work.title}
+                                                    </motion.h3>
+                                                )}
+                                                {work.clientName && (
+                                                    <p className="text-[#D4AF37] text-[9px] sm:text-[11px] uppercase tracking-[0.2em] font-bold">
+                                                        {work.clientName}
+                                                    </p>
+                                                )}
+                                                <div className="w-8 h-[1px] bg-[#D4AF37] mt-3 group-hover:w-16 transition-all duration-700" />
+                                            </div>
+
                                             {work.media?.length > 1 && (
-                                                <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-[#D4AF37] text-[9px] font-black uppercase tracking-widest px-2 py-1 border border-[#D4AF37]/30">
+                                                <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-[#D4AF37] text-[9px] font-black uppercase tracking-widest px-2 py-1 border border-[#D4AF37]/30 z-20">
                                                     {work.media.length}
                                                 </div>
                                             )}
-                                        </div>
-                                        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-10">
-                                            {work.title && (
-                                                <h3 className="text-white font-serif italic text-sm sm:text-lg leading-tight tracking-wide group-hover:text-[#D4AF37] transition-colors duration-300 line-clamp-2">
-                                                    {work.title}
-                                                </h3>
-                                            )}
-                                            {work.clientName && (
-                                                <p className="text-[#D4AF37]/70 text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-medium mt-1">
-                                                    {work.clientName}
-                                                </p>
-                                            )}
-                                            <div className="w-6 h-[1px] bg-[#D4AF37]/40 mt-2 group-hover:w-12 transition-all duration-500" />
                                         </div>
                                     </motion.div>
                                     );
@@ -416,7 +400,7 @@ const Gallery = () => {
                                                     <PlayCircle size={36} className="text-[#D4AF37] absolute z-10 transition-transform duration-500 group-hover:scale-125 drop-shadow-[0_0_12px_rgba(212,175,55,0.5)]" strokeWidth={1.5} />
                                                     <video
                                                         src={idea.url}
-                                                        className="absolute inset-0 w-full h-full object-cover opacity-70"
+                                                        className="absolute inset-0 w-full h-full object-cover"
                                                         muted loop playsInline preload="none"
                                                     />
                                                 </div>
