@@ -405,35 +405,31 @@ const Home = () => {
                                                 {/* Video */}
                                                 <video
                                                     src={videoMedia.url}
-                                                    className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:opacity-90 opacity-60 group-hover:scale-105"
+                                                    className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                                                     muted loop playsInline preload="none"
                                                     poster={videoMedia.coverUrl || ''}
                                                     onMouseEnter={e => e.target.play().catch(() => {})}
                                                     onMouseLeave={e => e.target.pause()}
                                                 />
-                                                {/* Dark gradient overlay */}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                                                {/* Gold shimmer on hover */}
-                                                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/0 to-[#D4AF37]/0 group-hover:from-[#D4AF37]/5 transition-all duration-700" />
-                                                {/* Play button */}
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black/40 border border-[#D4AF37]/50 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 group-hover:bg-[#D4AF37]/20 group-hover:border-[#D4AF37] transition-all duration-500 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
-                                                        <PlayCircle size={22} className="text-[#D4AF37] sm:hidden drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" strokeWidth={1.5} />
-                                                        <PlayCircle size={28} className="text-[#D4AF37] hidden sm:block drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" strokeWidth={1.5} />
+                                                {/* Premium Hover Info Overlay */}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4 sm:p-6 z-10">
+                                                    <div className="w-5 h-[1px] bg-[#D4AF37] mb-2 group-hover:w-10 transition-all duration-700" />
+                                                    <p className="text-white text-xs sm:text-base font-serif italic tracking-wide">
+                                                        {work.title || 'Interior Design'}
+                                                    </p>
+                                                </div>
+                                                
+                                                {/* Play button indicator */}
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                    <div className="w-12 h-12 rounded-full bg-black/40 border border-[#D4AF37]/30 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 group-hover:bg-[#D4AF37]/20 group-hover:border-[#D4AF37] transition-all duration-500 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
+                                                        <PlayCircle size={20} className="text-[#D4AF37]" strokeWidth={1.5} />
                                                     </div>
                                                 </div>
+                                                
                                                 {/* VIDEO badge */}
-                                                <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-black/70 border border-[#D4AF37]/30 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md">
-                                                    <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.12em] text-[#D4AF37]">Video</span>
+                                                <div className="absolute top-2 left-2 bg-black/70 border border-[#D4AF37]/30 px-2 py-0.5 rounded-md z-20">
+                                                    <span className="text-[8px] font-black uppercase tracking-[0.12em] text-[#D4AF37]">Video</span>
                                                 </div>
-                                            </div>
-
-                                            {/* Bottom info */}
-                                            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5 z-10">
-                                                <div className="w-5 h-[1px] bg-[#D4AF37]/50 mb-1.5 sm:mb-2 group-hover:w-10 transition-all duration-500" />
-                                                <p className="text-white text-[10px] sm:text-sm font-semibold uppercase tracking-wider opacity-80 group-hover:opacity-100 group-hover:text-[#D4AF37] transition-colors duration-300 line-clamp-1">
-                                                    {work.title || 'Interior'}
-                                                </p>
                                             </div>
                                         </motion.div>
                                     );
@@ -500,7 +496,7 @@ const Home = () => {
                 </section>
             )}
 
-            {/* ── Services We Offer Section ── */}
+            {/* ── What We Do Section ── */}
             <section id="our-services" className="py-20 bg-[#070707]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Section Header */}
@@ -521,7 +517,7 @@ const Home = () => {
                             transition={{ duration: 0.8, delay: 0.1 }}
                             className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4"
                         >
-                            Services We <span className="italic text-[#D4AF37]">Offer</span>
+                            What We <span className="italic text-[#D4AF37]">Offer</span>
                         </motion.h2>
                         <motion.div
                             initial={{ width: 0 }}
@@ -638,9 +634,9 @@ const Home = () => {
             {/* ── Design Ideas Section ── */}
             <DesignIdeas initialIdeas={designIdeas} initialLoading={loading} />
 
-            {/* ── Packages Section ── */}
+            {/* ── Pricing Packages Section ── */}
 
-            <section id="services" className="pt-10 pb-20 bg-[#0a0a0a]">
+            <section id="prices" className="pt-10 pb-20 bg-[#0a0a0a]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-10 sm:mb-12">
                         <motion.p
@@ -659,7 +655,7 @@ const Home = () => {
                             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                             className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4 sm:mb-6"
                         >
-                            Service <span className="italic text-[#D4AF37]">Packages</span>
+                            Pricing <span className="italic text-[#D4AF37]">Packages</span>
                         </motion.h2>
                         <motion.div
                             initial={{ width: 0 }}

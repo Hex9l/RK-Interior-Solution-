@@ -59,7 +59,7 @@ const Navbar = () => {
             };
 
             const observer = new IntersectionObserver(observerCallback, observerOptions);
-            const sections = ['hero', 'services'];
+            const sections = ['hero', 'prices'];
 
             sections.forEach(id => {
                 const el = document.getElementById(id);
@@ -78,7 +78,7 @@ const Navbar = () => {
 
     const navLinks = [
         { name: 'Home', path: '/' },
-        { name: 'Services', path: '/#services' },
+        { name: 'Prices', path: '/#prices' },
         { name: 'Gallery', path: '/gallery' },
         { name: 'Knowledge', path: '/furniture-knowledge' },
         { name: 'Contact', path: '/contact' },
@@ -88,8 +88,8 @@ const Navbar = () => {
         if (location.pathname === '/') {
             // Home link highlights for hero or when no specific section is caught yet
             if (path === '/') return activeSection === 'hero' || activeSection === '';
-            // Services link highlights when its section is dominant
-            if (path === '/#services') return activeSection === 'services';
+            // Prices link highlights when its section is dominant
+            if (path === '/#prices') return activeSection === 'prices';
         }
         return location.pathname === path;
     };

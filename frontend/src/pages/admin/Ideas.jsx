@@ -9,6 +9,7 @@ const AdminIdeas = () => {
     const [categories, setCategories] = useState([]);
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filterCategory, setFilterCategory] = useState('all');
 
     // Category Modal State
     const [showCatModal, setShowCatModal] = useState(false);
@@ -24,6 +25,8 @@ const AdminIdeas = () => {
     const [isAnimating, setIsAnimating] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+    const filterDropdownRef = useRef(null);
 
     useEffect(() => {
         fetchData();
@@ -49,6 +52,17 @@ const AdminIdeas = () => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Handle click outside filter dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+                setFilterDropdownOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -174,9 +188,9 @@ const AdminIdeas = () => {
     return (
         <div className="min-h-screen pb-24 sm:pb-12 bg-[#0a0a0a]">
             {/* Premium Header */}
-            <div className="relative lg:sticky lg:top-0 z-[30] bg-[#0a0a0a] lg:bg-[#0a0a0a]/90 lg:backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 py-4 sm:py-6 mb-4 sm:mb-8">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div>
+            <div className="relative lg:sticky lg:top-0 z-[30] bg-[#0a0a0a] lg:bg-[#0a0a0a]/90 lg:backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 py-5 sm:py-6 mb-6 sm:mb-8">
+                <div className="max-w-7xl mx-auto flex flex-row items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
                         <h1 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">Design Ideas</h1>
                         <p className="text-[#D4AF37] text-[10px] sm:text-xs font-semibold tracking-widest uppercase mt-1">Manage Inspiration</p>
                     </div>
@@ -203,6 +217,105 @@ const AdminIdeas = () => {
                     <button onClick={() => setActiveTab('categories')} className={`flex-1 sm:flex-none px-8 py-3 text-[11px] tracking-[0.2em] font-black uppercase rounded-xl transition-all duration-500 ${activeTab === 'categories' ? 'bg-[#D4AF37] text-black shadow-[0_4px_15px_rgba(212,175,55,0.3)]' : 'text-gray-500 hover:text-white'}`}>Categories</button>
                 </div>
 
+                {/* ASOS-Style Dropdown Filter — Only for Images Tab */}
+                {activeTab === 'images' && !loading && categories.length > 0 && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 bg-[#111]/30 p-4 rounded-xl border border-white/5">
+                        {/* Results count */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-black text-[#D4AF37]">
+                                {filterCategory === 'all'
+                                    ? images.length
+                                    : images.filter(img => img.category?._id === filterCategory).length}
+                            </span>
+                            <span className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-black">
+                                Designs Found
+                            </span>
+                        </div>
+
+                        {/* Dropdown Trigger */}
+                        <div className="relative w-full sm:w-auto" ref={filterDropdownRef}>
+                            <button
+                                onClick={() => setFilterDropdownOpen(prev => !prev)}
+                                className={`w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4 px-6 py-3 border text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                                    filterDropdownOpen
+                                        ? 'border-[#D4AF37] text-black bg-[#D4AF37]'
+                                        : filterCategory !== 'all'
+                                        ? 'border-[#D4AF37]/60 text-[#D4AF37] bg-[#D4AF37]/5'
+                                        : 'border-white/10 text-gray-400 bg-[#1a1a1a] hover:border-white/20 hover:text-white'
+                                }`}
+                            >
+                                <span>
+                                    {filterCategory === 'all'
+                                        ? 'View Category'
+                                        : categories.find(c => c._id === filterCategory)?.name || 'Category'
+                                    }
+                                </span>
+                                <motion.div
+                                    animate={{ rotate: filterDropdownOpen ? 180 : 0 }}
+                                    transition={{ duration: 0.25 }}
+                                >
+                                    <ChevronDown size={14} />
+                                </motion.div>
+                            </button>
+
+                            {/* Dropdown Panel */}
+                            <AnimatePresence>
+                                {filterDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                                        className="absolute left-0 sm:right-0 top-[calc(100%+8px)] z-50 w-full sm:w-72 bg-[#141414] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden rounded-xl"
+                                    >
+                                        {/* Header Row */}
+                                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                                            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+                                                {filterCategory === 'all' ? '0 selected' : '1 selected'}
+                                            </span>
+                                            <button
+                                                onClick={() => { setFilterCategory('all'); setFilterDropdownOpen(false); }}
+                                                className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest border transition-all duration-200 ${
+                                                    filterCategory === 'all'
+                                                        ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10'
+                                                        : 'border-white/10 text-gray-500 hover:border-[#D4AF37]/40 hover:text-[#D4AF37]'
+                                                }`}
+                                            >
+                                                {filterCategory === 'all' && <CheckCircle size={10} />}
+                                                All
+                                            </button>
+                                        </div>
+
+                                        {/* Category List */}
+                                        <div className="max-h-64 overflow-y-auto">
+                                            {categories.map((cat, i) => {
+                                                const count = images.filter(img => img.category?._id === cat._id).length;
+                                                const isActive = filterCategory === cat._id;
+                                                return (
+                                                    <button
+                                                        key={cat._id}
+                                                        onClick={() => { setFilterCategory(cat._id); setFilterDropdownOpen(false); }}
+                                                        className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm transition-all duration-150 border-b border-white/[0.03] last:border-0 ${
+                                                            isActive
+                                                                ? 'bg-[#D4AF37]/10 text-[#D4AF37]'
+                                                                : 'text-gray-300 hover:bg-white/[0.03] hover:text-white'
+                                                        }`}
+                                                    >
+                                                        <span className="font-semibold tracking-wide">{cat.name}</span>
+                                                        <span className={`text-xs font-bold ${
+                                                            isActive ? 'text-[#D4AF37]' : 'text-gray-600'
+                                                        }`}>({count})</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-32 animate-pulse">
                         <div className="w-16 h-16 rounded-full bg-[#111] flex items-center justify-center mb-4">
@@ -212,43 +325,55 @@ const AdminIdeas = () => {
                     </div>
                 ) : activeTab === 'images' ? (
                     <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-5">
-                        {images.map(img => (
-                            <div key={img._id} className="group relative bg-[#121212] rounded-2xl p-1 overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-2xl border border-white/[0.02]">
-                                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none rounded-2xl" />
-                                <div className="bg-[#121212] rounded-[0.9rem] h-full flex flex-col relative z-10 overflow-hidden">
-                                    {/* Media */}
-                                    <div className="aspect-[4/5] relative overflow-hidden">
-                                        {img.type === 'video' ? (
-                                            <video src={img.url} className="w-full h-full object-cover" autoPlay loop muted playsInline />
-                                        ) : (
-                                            <img src={img.url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                        )}
-                                    </div>
-                                    {/* Category name — solid, always readable */}
-                                    <div className="px-2 py-2 bg-[#0d0d0d] border-t border-white/5">
-                                        <p className="text-[9px] text-[#D4AF37] font-black uppercase tracking-widest text-center truncate">
-                                            {img.category?.name || 'Interior Design'}
-                                        </p>
-                                    </div>
-                                    {/* Always-visible action bar */}
-                                    <div className="flex bg-[#0d0d0d] border-t border-white/5 p-1.5 gap-1.5">
-                                        <button
-                                            onClick={() => { setEditingImgId(img._id); setImgFormData({ title: img.title, category: img.category?._id || '', url: img.url, type: img.type || 'image' }); setShowImgModal(true); }}
-                                            className="flex-1 flex items-center justify-center h-9 rounded-xl text-white bg-white/5 active:scale-95 transition-all"
-                                        >
-                                            <Edit2 size={14} />
-                                        </button>
-                                        <div className="w-px bg-white/10 my-1.5" />
-                                        <button
-                                            onClick={() => setDeleteConfirm({ id: img._id, type: 'image' })}
-                                            className="flex-1 flex items-center justify-center h-9 rounded-xl text-red-400 bg-red-500/5 active:scale-95 transition-all"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                        <AnimatePresence mode="popLayout">
+                            {images
+                                .filter(img => filterCategory === 'all' || img.category?._id === filterCategory)
+                                .map(img => (
+                                    <motion.div 
+                                        key={img._id}
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="group relative bg-[#121212] rounded-2xl p-1 overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-2xl border border-white/[0.02]"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none rounded-2xl" />
+                                        <div className="bg-[#121212] rounded-[0.9rem] h-full flex flex-col relative z-10 overflow-hidden">
+                                            {/* Media */}
+                                            <div className="aspect-[4/5] relative overflow-hidden">
+                                                {img.type === 'video' ? (
+                                                    <video src={img.url} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                                                ) : (
+                                                    <img src={img.url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                )}
+                                            </div>
+                                            {/* Category name — solid, always readable */}
+                                            <div className="px-2 py-2 bg-[#0d0d0d] border-t border-white/5">
+                                                <p className="text-[9px] text-[#D4AF37] font-black uppercase tracking-widest text-center truncate">
+                                                    {img.category?.name || 'Interior Design'}
+                                                </p>
+                                            </div>
+                                            {/* Always-visible action bar */}
+                                            <div className="flex bg-[#0d0d0d] border-t border-white/5 p-1.5 gap-1.5">
+                                                <button
+                                                    onClick={() => { setEditingImgId(img._id); setImgFormData({ title: img.title, category: img.category?._id || '', url: img.url, type: img.type || 'image' }); setShowImgModal(true); }}
+                                                    className="flex-1 flex items-center justify-center h-9 rounded-xl text-white bg-white/5 active:scale-95 transition-all"
+                                                >
+                                                    <Edit2 size={14} />
+                                                </button>
+                                                <div className="w-px bg-white/10 my-1.5" />
+                                                <button
+                                                    onClick={() => setDeleteConfirm({ id: img._id, type: 'image' })}
+                                                    className="flex-1 flex items-center justify-center h-9 rounded-xl text-red-400 bg-red-500/5 active:scale-95 transition-all"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                        </AnimatePresence>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
