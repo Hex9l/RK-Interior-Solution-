@@ -47,26 +47,22 @@ const AdminIdeas = () => {
         return () => { document.body.style.overflow = ''; };
     }, [showCatModal, showImgModal]);
 
-    // Handle click outside dropdown
+    // Handle click outside dropdowns (merged for performance)
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
             }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    // Handle click outside filter dropdown
-    useEffect(() => {
-        const handleClickOutside = (event) => {
             if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
                 setFilterDropdownOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside, { passive: true });
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
     }, []);
 
     const fetchData = async () => {
@@ -325,55 +321,62 @@ const AdminIdeas = () => {
                     </div>
                 ) : activeTab === 'images' ? (
                     <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-5">
-                        <AnimatePresence mode="popLayout">
-                            {images
-                                .filter(img => filterCategory === 'all' || img.category?._id === filterCategory)
-                                .map(img => (
-                                    <motion.div 
-                                        key={img._id}
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="group relative bg-[#121212] rounded-2xl p-1 overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-2xl border border-white/[0.02]"
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none rounded-2xl" />
-                                        <div className="bg-[#121212] rounded-[0.9rem] h-full flex flex-col relative z-10 overflow-hidden">
-                                            {/* Media */}
-                                            <div className="aspect-[4/5] relative overflow-hidden">
-                                                {img.type === 'video' ? (
-                                                    <video src={img.url} className="w-full h-full object-cover" autoPlay loop muted playsInline />
-                                                ) : (
-                                                    <img src={img.url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                )}
-                                            </div>
-                                            {/* Category name — solid, always readable */}
-                                            <div className="px-2 py-2 bg-[#0d0d0d] border-t border-white/5">
-                                                <p className="text-[9px] text-[#D4AF37] font-black uppercase tracking-widest text-center truncate">
-                                                    {img.category?.name || 'Interior Design'}
-                                                </p>
-                                            </div>
-                                            {/* Always-visible action bar */}
-                                            <div className="flex bg-[#0d0d0d] border-t border-white/5 p-1.5 gap-1.5">
-                                                <button
-                                                    onClick={() => { setEditingImgId(img._id); setImgFormData({ title: img.title, category: img.category?._id || '', url: img.url, type: img.type || 'image' }); setShowImgModal(true); }}
-                                                    className="flex-1 flex items-center justify-center h-9 rounded-xl text-white bg-white/5 active:scale-95 transition-all"
-                                                >
-                                                    <Edit2 size={14} />
-                                                </button>
-                                                <div className="w-px bg-white/10 my-1.5" />
-                                                <button
-                                                    onClick={() => setDeleteConfirm({ id: img._id, type: 'image' })}
-                                                    className="flex-1 flex items-center justify-center h-9 rounded-xl text-red-400 bg-red-500/5 active:scale-95 transition-all"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
+                        {images
+                            .filter(img => filterCategory === 'all' || img.category?._id === filterCategory)
+                            .map((img, index) => (
+                                <div
+                                    key={img._id}
+                                    className="group relative bg-[#121212] rounded-2xl p-1 overflow-hidden border border-white/[0.02] hover:-translate-y-1 transition-transform duration-300 shadow-xl"
+                                    style={{ animation: `fadeIn 0.3s ease forwards`, animationDelay: `${Math.min(index * 0.04, 0.4)}s`, opacity: 0 }}
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none rounded-2xl" />
+                                    <div className="bg-[#121212] rounded-[0.9rem] h-full flex flex-col relative z-10 overflow-hidden">
+                                        {/* Media */}
+                                        <div className="aspect-[4/5] relative overflow-hidden">
+                                            {img.type === 'video' ? (
+                                                <video
+                                                    src={img.url}
+                                                    className="w-full h-full object-cover"
+                                                    muted
+                                                    playsInline
+                                                    preload="none"
+                                                    onMouseEnter={e => e.target.play().catch(() => {})}
+                                                    onMouseLeave={e => e.target.pause()}
+                                                />
+                                            ) : (
+                                                <img
+                                                    src={img.url}
+                                                    alt=""
+                                                    loading="lazy"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                />
+                                            )}
                                         </div>
-                                    </motion.div>
-                                ))}
-                        </AnimatePresence>
+                                        {/* Category name */}
+                                        <div className="px-2 py-2 bg-[#0d0d0d] border-t border-white/5">
+                                            <p className="text-[9px] text-[#D4AF37] font-black uppercase tracking-widest text-center truncate">
+                                                {img.category?.name || 'Interior Design'}
+                                            </p>
+                                        </div>
+                                        {/* Action bar */}
+                                        <div className="flex bg-[#0d0d0d] border-t border-white/5 p-1.5 gap-1.5">
+                                            <button
+                                                onClick={() => { setEditingImgId(img._id); setImgFormData({ title: img.title, category: img.category?._id || '', url: img.url, type: img.type || 'image' }); setShowImgModal(true); }}
+                                                className="flex-1 flex items-center justify-center h-9 rounded-xl text-white bg-white/5 active:scale-95 transition-all"
+                                            >
+                                                <Edit2 size={14} />
+                                            </button>
+                                            <div className="w-px bg-white/10 my-1.5" />
+                                            <button
+                                                onClick={() => setDeleteConfirm({ id: img._id, type: 'image' })}
+                                                className="flex-1 flex items-center justify-center h-9 rounded-xl text-red-400 bg-red-500/5 active:scale-95 transition-all"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
