@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../utils/axiosInstance';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { useAuth } from '../context/AuthContext';
@@ -207,52 +209,84 @@ const LikedDesigns = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
                         className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
                         onClick={closeModal}
+                        data-lenis-prevent
                     >
-                        <button onClick={closeModal} className="absolute top-6 right-6 text-white/40 hover:text-[#D4AF37] transition-all bg-white/5 p-2 rounded-full border border-white/5 z-50">
-                            <X size={24} />
-                        </button>
+                        {/* Small, Cute Close Button */}
+                        <motion.button 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                            onClick={closeModal} 
+                            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white/40 hover:text-[#D4AF37] transition-all bg-white/5 hover:bg-white/10 p-2 rounded-full border border-white/5 backdrop-blur-md z-[80]"
+                        >
+                            <X size={20} />
+                        </motion.button>
 
                         {/* Navigation Arrows */}
-                        <div className="absolute inset-x-4 sm:inset-x-10 top-1/2 -translate-y-1/2 flex justify-between items-center pointer-events-none z-[75]">
-                            <button onClick={handlePrev} className="pointer-events-auto p-3 rounded-full bg-black/40 border border-white/10 text-white/60 hover:text-[#D4AF37] transition-all backdrop-blur-sm">
-                                <ChevronLeft size={24} />
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                            className="absolute inset-x-4 sm:inset-x-10 top-1/2 -translate-y-1/2 flex justify-between items-center pointer-events-none z-[75]"
+                        >
+                            <button
+                                onClick={handlePrev}
+                                className="pointer-events-auto p-2.5 sm:p-3 rounded-full bg-black/40 border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 hover:bg-black/80 transition-all backdrop-blur-sm group"
+                            >
+                                <ChevronLeft size={20} className="sm:size-6" />
                             </button>
-                            <button onClick={handleNext} className="pointer-events-auto p-3 rounded-full bg-black/40 border border-white/10 text-white/60 hover:text-[#D4AF37] transition-all backdrop-blur-sm">
-                                <ChevronRight size={24} />
+                            <button
+                                onClick={handleNext}
+                                className="pointer-events-auto p-2.5 sm:p-3 rounded-full bg-black/40 border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 hover:bg-black/80 transition-all backdrop-blur-sm group"
+                            >
+                                <ChevronRight size={20} className="sm:size-6" />
                             </button>
-                        </div>
+                        </motion.div>
 
                         <motion.div
-                            initial={{ scale: 0.98, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.98, opacity: 0 }}
-                            className="relative max-w-5xl w-full flex flex-col items-center"
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                            className="relative max-w-5xl max-h-[85vh] w-full flex flex-col items-center px-4"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="relative w-full overflow-hidden rounded-2xl shadow-2xl border border-white/10">
+                            <div className="relative w-full overflow-hidden rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.8)] border border-white/10 bg-black">
                                 {modalMedia.type === 'video' ? (
                                     <video key={modalMedia.url} src={modalMedia.url} controls autoPlay playsInline className="w-full max-h-[75vh] object-contain bg-black" />
                                 ) : (
-                                    <img key={modalMedia.url} src={modalMedia.url} alt="Preview" className="w-full max-h-[75vh] object-contain bg-black" />
+                                    <motion.img 
+                                        key={modalMedia.url} 
+                                        initial={{ opacity: 0.6 }} 
+                                        animate={{ opacity: 1 }} 
+                                        transition={{ duration: 0.3 }}
+                                        src={modalMedia.url} 
+                                        alt="Fullscreen Preview" 
+                                        className="w-full max-h-[75vh] object-contain bg-black" 
+                                        decoding="async" 
+                                    />
                                 )}
                             </div>
 
                             <div className="mt-6 flex flex-col items-center gap-4">
-                                <h3 className="text-[#D4AF37] font-serif italic text-2xl tracking-wide">
+                                <h3 className="text-[#D4AF37] font-serif italic text-2xl tracking-wide drop-shadow-[0_0_12px_rgba(212,175,55,0.35)]">
                                     {modalMedia.title}
                                 </h3>
                                 
                                 <div className="flex items-center gap-4">
-                                    <div className="px-5 py-2 rounded-full bg-white/5 border border-white/10">
+                                    <div className="px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
                                         <span className="text-[10px] text-gray-400 uppercase tracking-[0.3em]">
                                             {currentIndex + 1} of {likedIdeas.length}
                                         </span>
                                     </div>
                                     <button
                                         onClick={(e) => handleUnlike(e, likedIdeas[currentIndex]._id)}
-                                        className="p-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg"
+                                        className="p-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg backdrop-blur-md"
                                     >
                                         <Heart size={20} className="fill-current" />
                                     </button>

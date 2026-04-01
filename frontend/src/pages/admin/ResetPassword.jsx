@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Lock } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../utils/axiosInstance';
 

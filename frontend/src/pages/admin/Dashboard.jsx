@@ -6,7 +6,8 @@ import api from '../../utils/axiosInstance';
 
 const Dashboard = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const [stats, setStats] = useState({
+    const cachedStats = JSON.parse(localStorage.getItem('adminDashboardStats'));
+    const [stats, setStats] = useState(cachedStats || {
         packages: 0,
         works: 0,
         ideas: 0,
@@ -17,18 +18,20 @@ const Dashboard = () => {
         // Fetch some real stats concurrently
         const fetchStats = async () => {
             try {
-                const [pkgs, wrks, idas, knw, inq] = await Promise.all([
+                const [pkgs, wrks, idas, knw] = await Promise.all([
                     api.get('/packages'),
                     api.get('/works'),
                     api.get('/design-images'),
                     api.get('/inquiries')
                 ]);
-                setStats({
+                const newStats = {
                     packages: pkgs.data.length,
                     works: wrks.data.length,
                     ideas: idas.data.length,
                     inquiries: knw.data.filter(i => !i.isRead).length // Count unread
-                });
+                };
+                setStats(newStats);
+                localStorage.setItem('adminDashboardStats', JSON.stringify(newStats));
             } catch (e) {
                 console.error(e);
             }

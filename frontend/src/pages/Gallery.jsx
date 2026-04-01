@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     ChevronLeft, ChevronRight, PlayCircle, Heart, X, Search, Filter, 
@@ -25,6 +25,7 @@ const Gallery = () => {
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 12;
+    const gridRef = useRef(null);
 
     const filteredWorks = works.filter(work => {
         if (selectedWorkType === 'all') return true;
@@ -179,9 +180,62 @@ const Gallery = () => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const paginatedItems = activeItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
+    // Premium Custom Smooth Scroll Engine (Apple Trackpad Physics)
+    const smoothScrollTo = (targetY, duration = 1000) => {
+        const startY = window.scrollY;
+        const difference = targetY - startY;
+        let startTime = null;
+
+        // Ultra-smooth "easeOutQuint" for a fast start and a long, butter-smooth coasting finish
+        const easeOutQuint = (t) => 1 - Math.pow(1 - t, 5);
+
+        const step = (currentTime) => {
+            if (!startTime) startTime = currentTime;
+            const progress = currentTime - startTime;
+            const percent = Math.min(progress / duration, 1);
+            
+            window.scrollTo(0, startY + difference * easeOutQuint(percent));
+
+            if (progress < duration) {
+                requestAnimationFrame(step);
+            }
+        };
+
+        requestAnimationFrame(step);
+    };
+
     const handlePageChange = (page) => {
-        setCurrentPage(page);
-        window.scrollTo({ top: 300, behavior: 'smooth' });
+        if (page === '...' || page < 1 || page > totalPages) return;
+        
+        // 1. Calculate precise offset
+        if (gridRef.current) {
+            const yOffset = gridRef.current.getBoundingClientRect().top + window.scrollY - 80;
+            smoothScrollTo(yOffset);
+        }
+
+        // 2. The scroll takes 1000ms to fully settle.
+        // We trigger the image fade at 250ms, meaning the images dissolve beautifully
+        // during the long, slow coasting phase of the scroll.
+        setTimeout(() => {
+            setCurrentPage(page);
+        }, 250);
+    };
+
+    // Calculate Pagination Data
+    const getPageNumbers = () => {
+        const pages = [];
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            if (currentPage <= 3) {
+                pages.push(1, 2, 3, 4, 5, '...', totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+            } else {
+                pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+            }
+        }
+        return pages;
     };
 
     return (
@@ -219,6 +273,9 @@ const Gallery = () => {
                         </button>
                     </div>
                 </div>
+
+                {/* Stable scroll anchor just above the grid section */}
+                <div ref={gridRef} className="scroll-mt-28" />
 
                 {activeTab === 'works' && works.length > 0 && (
                     <div className="relative mb-12 sm:mb-16">
@@ -275,20 +332,19 @@ const Gallery = () => {
                         <div className="w-10 h-10 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37] animate-spin"></div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
-                        <AnimatePresence>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 min-h-[50vh]">
+                        <AnimatePresence mode="popLayout">
                             {activeTab === 'works' ? (
                                 paginatedItems.map((work, idx) => {
                                     const absoluteIndex = startIndex + idx;
                                     return (
                                     <motion.div
                                         key={work._id}
-                                        layout
                                         className="relative group cursor-pointer overflow-hidden bg-[#111] border border-white/[0.06] hover:border-[#D4AF37]/40 transition-all duration-500 hover:shadow-[0_12px_40px_rgba(212,175,55,0.10)]"
-                                        initial={{ opacity: 0, y: 20 }}
+                                        initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 20 }}
-                                        transition={{ duration: 0.4, delay: idx * 0.06 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ duration: 0.3, delay: idx * 0.04 }}
                                         onClick={() => work.media?.length > 0 && openModal(absoluteIndex)}
                                     >
                                         <div className="aspect-[3/4] sm:aspect-[4/5] overflow-hidden relative">
@@ -347,12 +403,11 @@ const Gallery = () => {
                                     return (
                                     <motion.div
                                         key={idea._id}
-                                        layout
                                         className="group cursor-pointer overflow-hidden bg-[#111] border border-white/[0.06] hover:border-[#D4AF37]/40 transition-all duration-500 hover:shadow-[0_12px_40px_rgba(212,175,55,0.10)]"
-                                        initial={{ opacity: 0, y: 20 }}
+                                        initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 20 }}
-                                        transition={{ duration: 0.4, delay: idx * 0.06 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ duration: 0.3, delay: idx * 0.04 }}
                                         onClick={() => openModal(absoluteIndex)}
                                     >
                                         <div className="aspect-[3/4] sm:aspect-[4/5] overflow-hidden relative">
@@ -399,36 +454,61 @@ const Gallery = () => {
                     </div>
                 )}
 
-                {/* Pagination Controls */}
+                {/* Modern Professional Pagination */}
                 {!loading && totalPages > 1 && (
-                    <div className="mt-16 flex justify-center items-center gap-2 sm:gap-4">
-                        <button
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="w-10 h-10 rounded-full flex items-center justify-center border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 disabled:opacity-30 disabled:pointer-events-none transition-all group"
-                        >
-                            <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
-                        </button>
-                        
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                            {Array.from({ length: totalPages }).map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => handlePageChange(i + 1)}
-                                    className={`w-8 h-8 rounded-full text-xs font-bold transition-all duration-300 ${currentPage === i + 1 ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-[#1a1a1a] text-gray-400 hover:text-white border border-transparent hover:border-white/20'}`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
-                        </div>
+                    <div className="mt-20 flex flex-col md:flex-row justify-center items-center gap-6">
+                        <div className="flex items-center bg-[#111] border border-white/5 rounded-full p-1.5 sm:p-2 shadow-2xl backdrop-blur-sm">
+                            {/* Previous Button */}
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-white/60 hover:text-[#D4AF37] hover:bg-white/5 disabled:opacity-30 disabled:pointer-events-none transition-all sm:mr-1 group shrink-0"
+                                aria-label="Previous Page"
+                            >
+                                <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+                            </button>
+                            
+                            {/* Page Numbers */}
+                            <div className="flex items-center gap-0.5 sm:gap-2">
+                                {getPageNumbers().map((page, i) => (
+                                    page === '...' ? (
+                                        <span key={`ellipsis-${i}`} className="w-6 h-8 sm:w-8 sm:h-10 flex items-center justify-center text-gray-500 font-serif tracking-widest pointer-events-none select-none">
+                                            ...
+                                        </span>
+                                    ) : (
+                                        <button
+                                            key={`page-${page}`}
+                                            onClick={() => handlePageChange(page)}
+                                            className={`w-8 h-8 sm:min-w-[40px] sm:h-10 rounded-full text-[11px] sm:text-sm font-bold transition-all duration-300 flex items-center justify-center ${
+                                                currentPage === page 
+                                                    ? 'bg-[#D4AF37] text-black shadow-[0_4px_15px_rgba(212,175,55,0.4)] scale-105' 
+                                                    : 'bg-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                                            }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    )
+                                ))}
+                            </div>
 
-                        <button
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="w-10 h-10 rounded-full flex items-center justify-center border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 disabled:opacity-30 disabled:pointer-events-none transition-all group"
-                        >
-                            <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
-                        </button>
+                            {/* Next Button */}
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-white/60 hover:text-[#D4AF37] hover:bg-white/5 disabled:opacity-30 disabled:pointer-events-none transition-all sm:ml-1 group shrink-0"
+                                aria-label="Next Page"
+                            >
+                                <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                            </button>
+                        </div>
+                        
+                        {/* Page Counter Display */}
+                        <div className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#111] border border-white/5 shadow-lg">
+                            <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest font-medium">Page</span>
+                            <span className="text-xs sm:text-sm text-[#D4AF37] font-black">{currentPage}</span>
+                            <span className="text-gray-600 px-1">/</span>
+                            <span className="text-xs sm:text-sm text-white/60">{totalPages}</span>
+                        </div>
                     </div>
                 )}
 
@@ -450,46 +530,67 @@ const Gallery = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
                         onClick={closeModal}
                         data-lenis-prevent
                     >
                         {/* Small, Cute Close Button */}
-                        <button 
+                        <motion.button 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
                             onClick={closeModal} 
                             className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white/40 hover:text-[#D4AF37] transition-all bg-white/5 hover:bg-white/10 p-2 rounded-full border border-white/5 backdrop-blur-md z-[80]"
                         >
                             <X size={20} />
-                        </button>
+                        </motion.button>
 
-                        {/* Navigation Arrows - Better Positioning & Responsive Sizing */}
-                        <div className="absolute inset-x-4 sm:inset-x-10 top-1/2 -translate-y-1/2 flex justify-between items-center pointer-events-none z-[75]">
+                        {/* Navigation Arrows */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                            className="absolute inset-x-4 sm:inset-x-10 top-1/2 -translate-y-1/2 flex justify-between items-center pointer-events-none z-[75]"
+                        >
                             <button
                                 onClick={handlePrev}
-                                className="pointer-events-auto p-2.5 sm:p-3 rounded-full bg-black/40 border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 hover:bg-black/60 transition-all backdrop-blur-sm group"
+                                className="pointer-events-auto p-2.5 sm:p-3 rounded-full bg-black/40 border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 hover:bg-black/80 transition-all backdrop-blur-sm group"
                             >
                                 <ChevronLeft size={20} className="sm:size-6" />
                             </button>
                             <button
                                 onClick={handleNext}
-                                className="pointer-events-auto p-2.5 sm:p-3 rounded-full bg-black/40 border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 hover:bg-black/60 transition-all backdrop-blur-sm group"
+                                className="pointer-events-auto p-2.5 sm:p-3 rounded-full bg-black/40 border border-white/10 text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 hover:bg-black/80 transition-all backdrop-blur-sm group"
                             >
                                 <ChevronRight size={20} className="sm:size-6" />
                             </button>
-                        </div>
+                        </motion.div>
 
                         <motion.div
-                            initial={{ scale: 0.98, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.98, opacity: 0 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                             className="relative max-w-5xl max-h-[85vh] w-full flex flex-col items-center px-4"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="relative w-full overflow-hidden rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.8)] border border-white/10">
+                            <div className="relative w-full overflow-hidden rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.8)] border border-white/10 bg-black">
                                 {modalMedia.type === 'video' ? (
                                     <video key={modalMedia.url} src={modalMedia.url} poster={modalMedia.coverUrl || ''} controls autoPlay playsInline preload="metadata" className="w-full max-h-[70vh] object-contain bg-black" />
                                 ) : (
-                                    <img key={modalMedia.url} src={modalMedia.url} alt="Fullscreen Preview" className="w-full max-h-[70vh] object-contain bg-black" decoding="async" />
+                                    <motion.img 
+                                        key={modalMedia.url} 
+                                        initial={{ opacity: 0.6 }} 
+                                        animate={{ opacity: 1 }} 
+                                        transition={{ duration: 0.3 }}
+                                        src={modalMedia.url} 
+                                        alt="Fullscreen Preview" 
+                                        className="w-full max-h-[70vh] object-contain bg-black" 
+                                        decoding="async" 
+                                    />
                                 )}
                             </div>
 
@@ -537,7 +638,7 @@ const Gallery = () => {
 
                                 {/* Media dot indicators for multi-media works */}
                                 {activeTab === 'works' && filteredWorks[currentIndex] && filteredWorks[currentIndex].media.length > 1 && (
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 mt-3">
                                         {filteredWorks[currentIndex].media.map((_, i) => (
                                             <div
                                                 key={i}
