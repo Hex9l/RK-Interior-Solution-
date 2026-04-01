@@ -52,20 +52,15 @@ export const registerUser = async (req, res) => {
         const user = await User.create({ name, email: normalizedEmail, password, isAdmin: false });
 
         if (user) {
-            // Get verification token
-            const verificationToken = user.getEmailVerificationToken();
+            // Get verification OTP
+            const verificationOtp = user.getEmailVerificationOtp();
             await user.save({ validateBeforeSave: false });
 
-            // Create verification url
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-            const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
-
-            const message = `Welcome to R K Interior Solution!\n\nPlease verify your email by clicking the link below:\n\n${verificationUrl}\n\nThis link is valid for 24 hours.`;
-            const html = getEmailTemplate(
+            const message = `Welcome to R K Interior Solution!\n\nYour Email Verification Code is: ${verificationOtp}\n\nThis code is valid for 15 minutes.`;
+            const html = getOtpEmailTemplate(
                 'Welcome to RK Interior Solution!',
-                '<p>Thank you for joining our community of design enthusiasts. To get started and explore our premium interior services, please verify your email address.</p>',
-                'Verify My Account',
-                verificationUrl
+                '<p>Thank you for joining our community of design enthusiasts. To get started and explore our premium interior services, please verify your email address using the code below:</p>',
+                verificationOtp
             );
 
             try {
@@ -229,39 +224,35 @@ export const resetPassword = async (req, res) => {
 };
 
 // @desc    Verify email
-// @route   GET /api/users/verify/:token
+// @route   POST /api/users/verify-email
 // @access  Public
 export const verifyEmail = async (req, res) => {
     try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ success: false, message: 'Please provide email and verification code.' });
+        }
+
+        const normalizedEmail = email.toLowerCase();
+
         const verificationToken = crypto
             .createHash('sha256')
-            .update(req.params.token)
+            .update(otp)
             .digest('hex');
 
         const user = await User.findOne({
+            email: normalizedEmail,
             verificationToken
         });
 
         if (!user) {
-            return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+            return res.status(400).json({ success: false, message: 'Invalid or expired verification code.' });
         }
 
-        // If already verified, still return success to the frontend
-        if (user.isVerified) {
-            return res.status(200).json({
-                success: true,
-                message: 'Email already verified!',
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                isAdmin: user.isAdmin,
-                token: generateToken(user._id)
-            });
-        }
-
-        // Check if token is expired for non-verified users
+        // Check if token is expired
         if (user.verificationExpire < Date.now()) {
-            return res.status(400).json({ success: false, message: 'Verification link has expired. Please request a new one.' });
+            return res.status(400).json({ success: false, message: 'Verification code has expired. Please request a new one.' });
         }
 
         user.isVerified = true;
@@ -301,18 +292,14 @@ export const resendVerification = async (req, res) => {
             return res.status(400).json({ message: 'User is already verified.' });
         }
 
-        const verificationToken = user.getEmailVerificationToken();
+        const verificationOtp = user.getEmailVerificationOtp();
         await user.save({ validateBeforeSave: false });
 
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
-
-        const message = `Please verify your email by clicking the link below:\n\n${verificationUrl}\n\nThis link is valid for 24 hours.`;
-        const html = getEmailTemplate(
+        const message = `Your Email Verification Code is: ${verificationOtp}\n\nThis code is valid for 15 minutes.`;
+        const html = getOtpEmailTemplate(
             'Complete Your Verification',
-            '<p>You requested to resend the verification link. Please click the button below to activate your account and access our premium interior services.</p>',
-            'Verify My Account',
-            verificationUrl
+            '<p>You requested to resend the verification code. Please use the code below to securely activate your account:</p>',
+            verificationOtp
         );
 
         await sendEmail({

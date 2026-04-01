@@ -23,8 +23,8 @@ const Signup = () => {
         setLoading(true);
         try {
             const { data } = await api.post('/users/register', { name, email, password });
-            toast.success(data.message || 'Verification email sent! Please check your inbox.');
-            navigate('/login');
+            toast.success(data.message || 'Verification code sent! Please check your inbox.');
+            navigate('/verify-email', { state: { email } });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
         } finally {

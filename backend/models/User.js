@@ -21,21 +21,21 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Generate and hash email verification token
-userSchema.methods.getEmailVerificationToken = function () {
-    // Generate token
-    const verificationToken = crypto.randomBytes(20).toString('hex');
+// Generate and hash email verification OTP
+userSchema.methods.getEmailVerificationOtp = function () {
+    // Generate a 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Hash token and set to verificationToken field
     this.verificationToken = crypto
         .createHash('sha256')
-        .update(verificationToken)
+        .update(otp)
         .digest('hex');
 
-    // Set expire (24 hours)
-    this.verificationExpire = Date.now() + 24 * 60 * 60 * 1000;
+    // Set expire (15 minutes)
+    this.verificationExpire = Date.now() + 15 * 60 * 1000;
 
-    return verificationToken;
+    return otp;
 };
 
 // Generate and hash password token

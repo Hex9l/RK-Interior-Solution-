@@ -138,11 +138,10 @@ const Login = () => {
                                     <p className="text-[10px] sm:text-xs text-gray-400 mb-2">Your email is not verified.</p>
                                     <button
                                         type="button"
-                                        onClick={handleResend}
-                                        disabled={resending}
-                                        className="text-[#D4AF37] hover:text-white text-[10px] sm:text-xs font-semibold tracking-widest uppercase transition-colors disabled:opacity-50"
+                                        onClick={() => navigate('/verify-email', { state: { email } })}
+                                        className="text-[#D4AF37] hover:text-white text-[10px] sm:text-xs font-semibold tracking-widest uppercase transition-colors"
                                     >
-                                        {resending ? 'Sending...' : 'Resend Verification Link'}
+                                        Verify Email / Enter Code
                                     </button>
                                 </div>
                             )}
